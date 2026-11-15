@@ -1,14 +1,33 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"github.com/gliderlabs/ssh"
 )
+
+type Log struct {
+	Time time.Time
+	IP   net.Addr
+	Usr  string
+	Pwd  string
+}
+
+func loadLogFile(fileName string) (*os.File, error) {
+	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+		0644, // file permissions
+	)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
 
 func startServer() {
 	hdlr := func(s ssh.Session) {
@@ -16,10 +35,7 @@ func startServer() {
 	}
 
 	auth := ssh.PasswordAuth(func(ctx ssh.Context, password string) bool {
-		ip := ctx.RemoteAddr()
-		usr := ctx.User()
-		pwd := password
-		logAttempt(ip, usr, pwd)
+		logAttempt(ctx.RemoteAddr(), ctx.User(), password)
 		return false
 	})
 
@@ -30,34 +46,26 @@ func startServer() {
 }
 
 func logAttempt(ip net.Addr, usr string, pwd string) {
-	log.Printf(
-		"%s  %s  '%s'",
-		ip, usr, pwd,
-	)
-}
-
-func loadLogFile() (*os.File, error) {
-	f, err := os.OpenFile(
-		"logfile.log",
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
-		0644, // file permissions
-	)
-	if err != nil {
-		return nil, err
+	e := Log{
+		Time: time.Now(),
+		IP:   ip,
+		Usr:  usr,
+		Pwd:  pwd,
 	}
-	return f, nil
+	b, _ := json.Marshal(e)
+	log.Println(string(b))
 }
 
 func main() {
-	f, err := loadLogFile()
+	f, err := loadLogFile("logfile.log")
 	if err != nil {
 		log.Printf("Failed to open log file: %s", err)
 		return
 	}
 	defer f.Close()
 
-	log.SetOutput(f)
-	log.SetFlags(log.Ltime)
+	log.SetOutput(f) // Set log output to *os.File
+	log.SetFlags(0)
 
 	startServer()
 }
