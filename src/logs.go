@@ -1,14 +1,15 @@
-package main
+package src
 
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"os"
 	"time"
 )
+
+var attemptlog *log.Logger
 
 type Log struct {
 	Time time.Time
@@ -18,7 +19,7 @@ type Log struct {
 	Pwd  string
 }
 
-func loadLogFile(fn string) (*os.File, error) {
+func LoadLogFile(fn string) (*os.File, error) {
 	f, err := os.OpenFile(fn, os.O_APPEND|os.O_CREATE|os.O_WRONLY,
 		0644, // file permissions
 	)
@@ -28,7 +29,7 @@ func loadLogFile(fn string) (*os.File, error) {
 	return f, nil
 }
 
-func logAttempt(ip, usr, pwd string) {
+func LogAttempt(ip, usr, pwd string) {
 	h, p, err := net.SplitHostPort(ip)
 	if err != nil {
 		log.Println("Count not split host:port string: %s", err)
@@ -41,7 +42,7 @@ func logAttempt(ip, usr, pwd string) {
 		Pwd:  pwd,
 	}
 	b, _ := json.Marshal(e)
-	log.Println(string(b))
+	attemptlog.Println(string(b))
 }
 
 func parseLog(fn string) ([]Log, error) {
@@ -66,12 +67,4 @@ func parseLog(fn string) ([]Log, error) {
 		data = append(data, line)
 	}
 	return data, nil
-}
-
-func scoreBoard(line []Log) {
-	count := map[string]int{}
-	for _, l := range line {
-		count[l.Hst]++
-	}
-	fmt.Println(count)
 }

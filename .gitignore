@@ -1,4 +1,4 @@
 host_key*
-logfile.log
+*.log
 honeypot
 go.sum
