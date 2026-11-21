@@ -1,6 +1,8 @@
-# gopot 
-
+<div align="center">
+# **gopot** 
+![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white)
 Gopot is a honeypot server that logs every login attempt, storing logs and information about the attempt, and never returning a session no matter the password combination. 
+</div>
 
 ### **Why**
 I made this project to learn more about credential-stuffing bots, and what it's like being on the receiving end of one. 
